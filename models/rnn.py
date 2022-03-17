@@ -1,27 +1,32 @@
 import pandas as pd
+import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
 
-from tensorflow.keras.layers import Input, Dense, Dropout, LSTM
+from tensorflow.keras.layers import Dense, Dropout, LSTM
 from tensorflow.keras.datasets.mnist import load_data
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasClassifier
-from sklearn.model_selection import GridSearchCV, train_test_split
-from sklearn.model_selection import StratifiedKFold
 from tensorflow.keras.utils import to_categorical
 
+from keras.models import Sequential
+from keras.wrappers.scikit_learn import KerasClassifier
 
-from tensorflow.keras.utils import plot_model
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.metrics import confusion_matrix
+
+
 
 
 def create_model(X, optimizer='SGD', loss='categorical_crossentropy'):
 
     model = Sequential()
-    model.add(LSTM(128, input_shape=X.shape[1:], activation = 'relu', return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(128, input_shape=X.shape[1:], activation = 'relu'))
+    model.add(LSTM(128, input_shape=X.shape[1:], activation = 'tanh', return_sequences=True))
+    model.add(Dropout(0.3))
+    model.add(LSTM(128, activation = 'tanh'))
+    model.add(Dropout(0.3))
+    model.add(LSTM(64, activation = 'tanh'))
     model.add(Dropout(0.2))
     model.add(Dense(32, activation = 'relu'))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.3))
     model.add(Dense(10, activation = 'softmax'))
 
     model.compile(optimizer=optimizer,
@@ -34,20 +39,19 @@ def create_model(X, optimizer='SGD', loss='categorical_crossentropy'):
     return model
 
 
-def fit_rnn_model(X, y, optimizer='adam', loss='categorical_crossentropy', epochs=40, batch_size=64):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y)
+def fit_rnn_model(x_train, y_train, x_test, y_test, optimizer='adam', loss='categorical_crossentropy', epochs=40, batch_size=64):
     y_train_cat = to_categorical(y_train, 10)
     y_test_cat = to_categorical(y_test, 10)
 
-    model = create_model(X, optimizer, loss)
-    history = model.fit(X_train, y_train_cat, validation_data=(X_test, y_test_cat), batch_size=batch_size,
+    model = create_model(x_train, optimizer, loss)
+    history = model.fit(x_train, y_train_cat, validation_data=(x_test, y_test_cat), batch_size=batch_size,
                         epochs=epochs)
 
 
     # wykresy acc i loss
     fig, ax = plt.subplots(2,1, figsize=(18, 10))
     ax[0].plot(history.history['loss'], color='b', label="Training loss")
-    ax[0].plot(history.history['val_loss'], color='r', label="validation loss",axes =ax[0])
+    ax[0].plot(history.history['val_loss'], color='r', label="validation loss",axes=ax[0])
     legend = ax[0].legend(loc='best', shadow=True)
     
 
@@ -55,6 +59,22 @@ def fit_rnn_model(X, y, optimizer='adam', loss='categorical_crossentropy', epoch
     ax[1].plot(history.history['val_accuracy'], color='r',label="Validation accuracy")
     legend = ax[1].legend(loc='best', shadow=True)
     plt.savefig('rnn_plot.png')
+
+
+    # macierz konfuzji
+    fig = plt.figure(figsize=(10, 10)) 
+
+    y_pred = model.predict(x_test) # predykcja zakodowana jako np. 2 => [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+    Y_pred = np.argmax(y_pred, 1) # zdekoduj do [0, 0, 1, 0, 0, 0, 0, 0, 0, 0] => 2
+    Y_test = np.argmax(y_test_cat, 1) 
+
+    mat = confusion_matrix(Y_test, Y_pred) 
+
+    sns.heatmap(mat.T, square=True, annot=True, cbar=False, cmap=plt.cm.Blues)
+    plt.xlabel('Predicted Values')
+    plt.ylabel('True Values')
+    plt.savefig('cnn_matrix.png')
 
     return model
 

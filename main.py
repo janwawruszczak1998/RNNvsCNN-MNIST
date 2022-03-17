@@ -9,8 +9,8 @@ print('x_train shape:', x_train.shape)
 print('Number of images in x_train', x_train.shape[0])
 print('Number of images in x_test', x_test.shape[0])
 
-find_cnn_model_params(x_test, y_test)
-#fit_cnn_model(x_train, y_train)
+#find_cnn_model_params(x_test, y_test)
+fit_cnn_model(x_train, y_train, x_test, y_test)
 
 
 
@@ -20,8 +20,8 @@ print('x_train shape:', x_train.shape)
 print('Number of images in x_train', x_train.shape[0])
 print('Number of images in x_test', x_test.shape[0])
 
-find_rnn_model_params(x_test, y_test)
-#fit_rnn_model(x_train, y_train)
+#find_rnn_model_params(x_test, y_test)
+fit_rnn_model(x_train, y_train, x_test, y_test)
 
 
 
