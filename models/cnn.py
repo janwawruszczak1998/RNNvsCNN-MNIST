@@ -17,7 +17,7 @@ from sklearn.metrics import confusion_matrix
 
 
 
-def create_model(X, optimizer='SGD', loss='categorical_crossentropy'):
+def create_model(X, optimizer='SGD', loss='sparse_categorical_crossentropy'):
 
     model=Sequential()
 
@@ -43,8 +43,6 @@ def create_model(X, optimizer='SGD', loss='categorical_crossentropy'):
     
     model.compile(loss=loss, optimizer=optimizer, metrics=["accuracy"])
 
-    from keras.utils.vis_utils import plot_model
-    plot_model(model, to_file='model_cnn.png', show_shapes=True, show_layer_names=True)
     return model
 
 
@@ -70,7 +68,7 @@ def load_data_CNN():
 
 
 
-def fit_cnn_model(x_train, y_train, x_test, y_test, optimizer='adam', loss='categorical_crossentropy', epochs=40, batch_size=64):
+def fit_cnn_model(x_train, y_train, x_test, y_test, optimizer='adam', loss='sparse_categorical_crossentropy', epochs=40, batch_size=64):
     y_train_cat = to_categorical(y_train, 10)
     y_test_cat = to_categorical(y_test, 10)
     model = create_model(x_train, optimizer, loss)
@@ -103,6 +101,9 @@ def fit_cnn_model(x_train, y_train, x_test, y_test, optimizer='adam', loss='cate
     plt.ylabel('True Values')
     plt.savefig('cnn_matrix.png')
 
+    from keras.utils.vis_utils import plot_model
+    plot_model(model, to_file='model_cnn.png', show_shapes=True, show_layer_names=True)
+
     return model
 
 
@@ -111,8 +112,8 @@ def find_cnn_model_params(X, labels):
 
     param_grid = {
         'epochs': [10, 20, 40],
-        'batch_size': [16, 32, 64],
-        'optimizer': ['rmsprop', 'adam'],
+        'batch_size': [8, 16, 32, 64],
+        'optimizer': ['rmsprop', 'adam', 'mse', 'SGD'],
     }
 
     grid = GridSearchCV(estimator=model, param_grid=param_grid,
