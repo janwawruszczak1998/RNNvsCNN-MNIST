@@ -33,45 +33,47 @@ def create_model(X, optimizer='SGD', loss='sparse_categorical_crossentropy'):
     return model
 
 
-def fit_rnn_model(x_train, y_train, x_test, y_test, optimizer='adam', loss='sparse_categorical_crossentropy', epochs=40, batch_size=64):
+def fit_rnn_model(x_train, y_train, id, optimizer='rmsprop', loss='categorical_crossentropy', epochs=40, batch_size=8):
     y_train_cat = to_categorical(y_train, 10)
-    y_test_cat = to_categorical(y_test, 10)
+    #y_test_cat = to_categorical(y_test, 10)
 
     model = create_model(x_train, optimizer, loss)
-    history = model.fit(x_train, y_train_cat, validation_data=(x_test, y_test_cat), batch_size=batch_size,
-                        epochs=epochs)
+    history = model.fit(x_train, y_train_cat,  batch_size=batch_size, epochs=epochs, validation_split=0.3)
 
 
     # wykresy acc i loss
     fig, ax = plt.subplots(2,1, figsize=(18, 10))
-    ax[0].plot(history.history['loss'], color='b', label="Training loss")
-    ax[0].plot(history.history['val_loss'], color='r', label="validation loss",axes=ax[0])
-    legend = ax[0].legend(loc='best', shadow=True)
-    
+    ax[0].plot(history.history['loss'])
+    ax[0].plot(history.history['val_loss'])
+    ax[0].set_xlabel('Epoch')
+    ax[0].set_ylabel('Loss')
+    ax[0].legend(["Training loss", "Validation loss"], loc='best')
 
-    ax[1].plot(history.history['accuracy'], color='b', label="Training accuracy")
-    ax[1].plot(history.history['val_accuracy'], color='r',label="Validation accuracy")
-    legend = ax[1].legend(loc='best', shadow=True)
-    plt.savefig('rnn_plot.png')
+    ax[1].plot(history.history['accuracy'])
+    ax[1].plot(history.history['val_accuracy'])
+    ax[1].set_xlabel('Epoch')
+    ax[1].set_ylabel('Accuracy')
+    ax[1].legend(["Training accuracy", "Validation accuracy"], loc='best')
+    plt.savefig('plots/rnn_plot_{}.png'.format(id))
 
 
-    # macierz konfuzji
-    fig = plt.figure(figsize=(10, 10)) 
-
-    y_pred = model.predict(x_test) # predykcja zakodowana jako np. 2 => [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
-
-    Y_pred = np.argmax(y_pred, 1) # zdekoduj do [0, 0, 1, 0, 0, 0, 0, 0, 0, 0] => 2
-    Y_test = np.argmax(y_test_cat, 1) 
-
-    mat = confusion_matrix(Y_test, Y_pred) 
-
-    sns.heatmap(mat.T, square=True, annot=True, cbar=False, cmap=plt.cm.Blues)
-    plt.xlabel('Predicted Values')
-    plt.ylabel('True Values')
-    plt.savefig('cnn_matrix.png')
+    # # macierz konfuzji
+    # fig = plt.figure(figsize=(10, 10))
+    #
+    # y_pred = model.predict(x_test) # predykcja zakodowana jako np. 2 => [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+    #
+    # Y_pred = np.argmax(y_pred, 1) # zdekoduj do [0, 0, 1, 0, 0, 0, 0, 0, 0, 0] => 2
+    # Y_test = np.argmax(y_test_cat, 1)
+    #
+    # mat = confusion_matrix(Y_test, Y_pred)
+    #
+    # sns.heatmap(mat.T, square=True, annot=True, cbar=False, cmap=plt.cm.Blues)
+    # plt.xlabel('Predicted Values')
+    # plt.ylabel('True Values')
+    # plt.savefig('cnn_matrix.png')
 
     from keras.utils.vis_utils import plot_model
-    plot_model(model, to_file='model_rnn.png', show_shapes=True, show_layer_names=True)
+    plot_model(model, to_file='models/model_rnn_{}.png'.format(id), show_shapes=True, show_layer_names=True)
 
     return model
 
@@ -86,8 +88,8 @@ def load_data_RNN():
     # normalizacja do RGB przez podzielenie przez RGBmax
     x_train = x_train / 255.0
     x_test = x_test/ 255.0
-    
-    
+
+
     return x_train, y_train, x_test, y_test
 
 
@@ -113,4 +115,3 @@ def find_rnn_model_params(X, labels):
         file.write(df.to_string())
         file.write("\n")
 
-    
